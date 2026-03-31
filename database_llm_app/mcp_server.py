@@ -30,7 +30,7 @@ def build_mcp_server(*, settings: Settings, chat_service: DatabaseChatService) -
         WIDGET_URI,
         name="database-llm-chat-widget",
         title="Database LLM Chat",
-        description="Ask questions about the database and get Korean answers generated from live query results.",
+        description="Ask questions about the database or fund documents and get Korean answers from live data.",
         mime_type="text/html;profile=mcp-app",
     )
     def chat_widget() -> str:
@@ -54,7 +54,7 @@ def build_mcp_server(*, settings: Settings, chat_service: DatabaseChatService) -
     @mcp.tool(
         name="ask_database_question",
         title="Ask Database Question",
-        description="Generate a read-only SQL query, execute it, and answer in Korean.",
+        description="Answer a database question in Korean, or search fund document paths when the question is about regulations or prospectuses.",
         annotations=ToolAnnotations(readOnlyHint=True),
     )
     def ask_database_question(question: str) -> dict:
@@ -66,5 +66,28 @@ def build_mcp_server(*, settings: Settings, chat_service: DatabaseChatService) -
             "row_count": result.row_count,
             "rows": result.rows,
         }
+
+    @mcp.tool(
+        name="search_fund_documents",
+        title="Search Fund Documents",
+        description="Search fund regulation and prospectus files from the SFTP /FUND tree.",
+        annotations=ToolAnnotations(readOnlyHint=True),
+    )
+    def search_fund_documents(query: str) -> dict:
+        matches = chat_service.search_fund_documents(query)
+        return {
+            "query": query,
+            "matches": matches,
+        }
+
+    @mcp.tool(
+        name="list_fund_document_root",
+        title="List Fund Document Root",
+        description="List top-level directories and files under the SFTP fund document root.",
+        annotations=ToolAnnotations(readOnlyHint=True),
+    )
+    def list_fund_document_root() -> dict:
+        items = chat_service.list_fund_document_root()
+        return {"items": items}
 
     return mcp

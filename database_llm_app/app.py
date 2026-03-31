@@ -98,6 +98,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"메모리 조회 실패: {exc}") from exc
 
+    @app.get("/api/fund-docs/root")
+    def fund_docs_root():
+        try:
+            return {"root": resolved.sftp_fund_root, "items": chat_service.list_fund_document_root()}
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"SFTP 루트 조회 실패: {exc}") from exc
+
+    @app.get("/api/fund-docs/search")
+    def fund_docs_search(query: str):
+        try:
+            return {"query": query, "matches": chat_service.search_fund_documents(query)}
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"SFTP 문서 검색 실패: {exc}") from exc
+
     if resolved.enable_debug_endpoints:
         @app.get("/debug/db-test")
         def debug_db_test():
@@ -121,6 +139,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 return {"ip": ip}
             except Exception as exc:
                 raise HTTPException(status_code=502, detail=f"외부 IP 조회 실패: {exc}") from exc
+
+        @app.get("/debug/fund-docs-root")
+        def debug_fund_docs_root():
+            try:
+                return {"root": resolved.sftp_fund_root, "items": chat_service.list_fund_document_root()}
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"SFTP 루트 조회 실패: {exc}") from exc
 
     app.mount(resolved.mcp_path, mcp_app)
     return app

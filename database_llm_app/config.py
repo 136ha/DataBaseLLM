@@ -64,6 +64,11 @@ class Settings:
     mssql_charset: str
     db_allowed_tables: tuple[str, ...]
     db_query_row_limit: int
+    sftp_host: str | None
+    sftp_port: int
+    sftp_user: str | None
+    sftp_password: str | None
+    sftp_fund_root: str
     enable_debug_endpoints: bool
     enable_dns_rebinding_protection: bool
 
@@ -94,6 +99,11 @@ class Settings:
             mssql_charset=_first_env("MSSQL_CHARSET", default="CP949") or "CP949",
             db_allowed_tables=_csv_env("DB_ALLOWED_TABLES", DEFAULT_ALLOWED_TABLES),
             db_query_row_limit=row_limit,
+            sftp_host=_first_env("SFTP_HOST"),
+            sftp_port=int(_first_env("SFTP_PORT", default="22") or "22"),
+            sftp_user=_first_env("SFTP_USER"),
+            sftp_password=_first_env("SFTP_PASSWORD"),
+            sftp_fund_root=_first_env("SFTP_FUND_ROOT", default="/FUND") or "/FUND",
             enable_debug_endpoints=_env_flag("APP_ENABLE_DEBUG_ENDPOINTS", default=app_env != "prod"),
             enable_dns_rebinding_protection=_env_flag(
                 "MCP_ENABLE_DNS_REBINDING_PROTECTION", default=app_env == "prod"

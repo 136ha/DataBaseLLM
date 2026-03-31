@@ -12,6 +12,7 @@ from .multi_intent_splitter import MultiIntentSplitter
 from .models import StructuredQuery, ValidationResult
 from .schema_graph import SchemaGraph
 from .semantic_dictionary import SemanticDictionary
+from .sftp_docs import FundDocumentService
 from .sql_builder import SQLBuilder
 from .sql_validator import SQLValidator
 
@@ -36,6 +37,7 @@ class QueryOrchestrator:
         self._llm = LLMClient(settings)
         self._dictionary = SemanticDictionary()
         self._schema_graph = SchemaGraph()
+        self._documents = FundDocumentService(settings)
         self._memory = MemoryStore(PROJECT_ROOT / "artifacts" / "memory")
         self._intent_parser = IntentParser(self._llm)
         self._splitter = MultiIntentSplitter(self._llm)
@@ -55,6 +57,12 @@ class QueryOrchestrator:
     def get_memory(self, session_id: str) -> dict:
         return self._memory.load(session_id).model_dump()
 
+    def list_fund_document_root(self) -> list[str]:
+        return self._documents.list_root()
+
+    def search_fund_documents(self, query: str) -> list[dict]:
+        return self._documents.search(query)
+
     def ask(self, *, question: str, session_id: str) -> OrchestratedAnswer:
         question = question.strip()
         if not question:
@@ -65,6 +73,19 @@ class QueryOrchestrator:
         return self._ask_single(question=question, session_id=session_id)
 
     def _ask_single(self, *, question: str, session_id: str) -> OrchestratedAnswer:
+        if self._documents.is_document_question(question):
+            answer, matches = self._documents.answer(question)
+            return OrchestratedAnswer(
+                answer=answer,
+                sql="",
+                reasoning="규약/투자설명서 질문으로 판단해 SFTP 문서 경로를 검색했습니다.",
+                row_count=len(matches),
+                rows=matches,
+                structured_query={"type": "document_search", "query": question},
+                validation_warnings=[],
+                mode="single",
+                sub_results=[],
+            )
         memory = self._memory.load(session_id)
         structured_query = self._intent_parser.parse(question=question, memory=memory)
         structured_query = self._dictionary.normalize(structured_query)

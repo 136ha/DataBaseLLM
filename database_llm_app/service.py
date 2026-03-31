@@ -33,6 +33,12 @@ class DatabaseChatService:
     def get_memory(self, session_id: str) -> dict:
         return self._orchestrator.get_memory(session_id)
 
+    def list_fund_document_root(self) -> list[str]:
+        return self._orchestrator.list_fund_document_root()
+
+    def search_fund_documents(self, query: str) -> list[dict]:
+        return self._orchestrator.search_fund_documents(query)
+
     def ask(self, question: str, *, session_id: str = "default") -> ChatAnswer:
         result = self._orchestrator.ask(question=question, session_id=session_id)
         return ChatAnswer(
