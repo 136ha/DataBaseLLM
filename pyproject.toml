@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "database-llm-app"
+version = "0.1.0"
+description = "Chat-style app that queries MSSQL and answers with an LLM."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.128.0",
+  "mcp==1.25.0",
+  "openai==2.15.0",
+  "pymssql==2.3.8",
+  "python-dotenv==1.2.2",
+  "sqlalchemy==2.0.44",
+  "uvicorn==0.40.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+packages = [
+  "database_llm_app",
+  "database_llm_app.ui",
+]
+
+[tool.setuptools.package-data]
+database_llm_app = ["ui/*.html", "metadata/*.json"]

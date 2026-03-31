@@ -1,0 +1,29 @@
+{
+  "base_table": "dbo.PFO_FTOP_INTG_TR t",
+  "joins": {
+    "fund": "LEFT JOIN dbo.TRU_FUND_INFR_BS f ON t.FUND_CODE = f.FUND_CODE",
+    "broker": "LEFT JOIN dbo.TRU_TRPL_BS p ON t.TRPL_CODE = p.TRPL_CODE",
+    "item": "LEFT JOIN dbo.TRU_FTOP_ITMS_BS i ON t.ITMS_CODE = i.ITMS_CODE"
+  },
+  "allowed_tables": [
+    "dbo.PFO_FTOP_INTG_TR",
+    "dbo.TRU_FUND_INFR_BS",
+    "dbo.TRU_TRPL_BS",
+    "dbo.TRU_FTOP_ITMS_BS"
+  ],
+  "allowed_columns": [
+    "PROC_DATE",
+    "FUND_CODE",
+    "TRPL_CODE",
+    "ITMS_CODE",
+    "BUYN_SLNG_DNCD",
+    "TRNS_AMT",
+    "CNTC_QNTY",
+    "MNGOD_SEQ",
+    "FUND_NAME",
+    "TRPL_NAME",
+    "ITMS_NAME"
+  ],
+  "date_expression": "t.PROC_DATE",
+  "default_order_expression": "t.PROC_DATE DESC"
+}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Database LLM Chat</title>
+    <style>
+      :root {
+        --bg: #f5efe3;
+        --panel: rgba(255, 252, 246, 0.92);
+        --panel-strong: #fffdf9;
+        --ink: #1e241d;
+        --muted: #5a6258;
+        --accent: #155eef;
+        --accent-soft: #dbe7ff;
+        --line: rgba(30, 36, 29, 0.12);
+        --good: #0a7d45;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans KR", "Noto Sans KR", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(21, 94, 239, 0.16), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(10, 125, 69, 0.14), transparent 28%),
+          linear-gradient(180deg, #f8f3e9 0%, #efe7d8 100%);
+        min-height: 100vh;
+      }
+
+      .shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      .hero {
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 760px;
+        font-size: 1rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 20px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 18px 40px rgba(38, 44, 33, 0.08);
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        padding: 16px;
+        font: inherit;
+        background: var(--panel-strong);
+      }
+
+      button {
+        border: 0;
+        background: var(--accent);
+        color: white;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .status {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .answer {
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.9rem;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .chip {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      @media (max-width: 920px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="pill">Live DB + LLM</div>
+        <h1>질문하면 DB를 읽고 답하는 챗 앱</h1>
+        <p>허용된 테이블 범위에서 읽기 전용 SQL을 생성하고, 실제 조회 결과를 바탕으로 한국어 답변을 만듭니다.</p>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2>질문</h2>
+          <textarea id="question" placeholder="예: 최근 기준일의 펀드별 순매수 상위 종목을 보여줘."></textarea>
+          <div class="actions">
+            <button id="send">질문하기</button>
+            <span id="status" class="status">대기 중</span>
+          </div>
+          <div class="chips">
+            <button class="chip" data-question="가장 최근 기준으로 브로커별 거래금액 상위 3개 보여줘">브로커 상위 3</button>
+            <button class="chip" data-question="그중 상위 1개만">후속 질문</button>
+            <button class="chip" data-question="가장 최근 기준으로 펀드별 거래금액 합계를 보여줘">펀드 합계</button>
+            <button class="chip" data-question="최근 7일 기준 거래금액 추이를 보여줘">7일 추이</button>
+            <button class="chip" data-question="가장 최근 기준으로 매수 거래금액 상위 펀드 5개 보여줘">매수 상위 펀드</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>답변</h2>
+          <div id="answer" class="answer">아직 질문이 없습니다.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const apiBase = "__API_BASE_URL__" || window.location.origin;
+      const sessionStorageKey = "database-llm-session-id";
+      const els = {
+        question: document.getElementById("question"),
+        send: document.getElementById("send"),
+        status: document.getElementById("status"),
+        answer: document.getElementById("answer"),
+      };
+
+      function currentSessionId() {
+        const existing = window.localStorage.getItem(sessionStorageKey);
+        if (existing) {
+          return existing;
+        }
+        const generated = `web-${Math.random().toString(36).slice(2, 10)}`;
+        window.localStorage.setItem(sessionStorageKey, generated);
+        return generated;
+      }
+
+      async function askQuestion() {
+        const question = els.question.value.trim();
+        if (!question) {
+          els.status.textContent = "질문을 입력해 주세요.";
+          return;
+        }
+        els.send.disabled = true;
+        els.status.textContent = "DB와 LLM에 질의 중...";
+
+        try {
+          const response = await fetch(`${apiBase}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, session_id: currentSessionId() }),
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.detail || "요청 실패");
+          }
+          els.answer.textContent = payload.answer || "(답변 없음)";
+          els.status.textContent = "완료";
+          window.openai?.notifyIntrinsicHeight?.();
+        } catch (error) {
+          els.answer.textContent = "";
+          els.status.textContent = error.message;
+        } finally {
+          els.send.disabled = false;
+        }
+      }
+
+      els.send.addEventListener("click", askQuestion);
+      document.querySelectorAll(".chip").forEach((button) => {
+        button.addEventListener("click", () => {
+          els.question.value = button.dataset.question || "";
+        });
+      });
+      els.question.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          askQuestion();
+        }
+      });
+    </script>
+  </body>
+</html>

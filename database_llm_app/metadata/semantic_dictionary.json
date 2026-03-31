@@ -1,0 +1,78 @@
+{
+  "metrics": {
+    "transaction_amount": {
+      "label_ko": "거래금액",
+      "expression": "SUM(t.TRNS_AMT)",
+      "source_column": "t.TRNS_AMT",
+      "default_for": ["ranking", "aggregate", "trend"]
+    },
+    "contract_quantity": {
+      "label_ko": "체결수량",
+      "expression": "SUM(t.CNTC_QNTY)",
+      "source_column": "t.CNTC_QNTY"
+    },
+    "transaction_count": {
+      "label_ko": "거래건수",
+      "expression": "COUNT(*)",
+      "source_column": "t.MNGOD_SEQ"
+    }
+  },
+  "dimensions": {
+    "fund": {
+      "label_ko": "펀드",
+      "code_expression": "t.FUND_CODE",
+      "label_expression": "f.FUND_NAME",
+      "requires_join": "fund"
+    },
+    "broker": {
+      "label_ko": "거래상대방",
+      "code_expression": "t.TRPL_CODE",
+      "label_expression": "p.TRPL_NAME",
+      "requires_join": "broker"
+    },
+    "item": {
+      "label_ko": "종목",
+      "code_expression": "t.ITMS_CODE",
+      "label_expression": "i.ITMS_NAME",
+      "requires_join": "item"
+    },
+    "proc_date": {
+      "label_ko": "처리일자",
+      "code_expression": "t.PROC_DATE",
+      "label_expression": null,
+      "requires_join": null
+    }
+  },
+  "synonyms": {
+    "거래금액": "transaction_amount",
+    "금액": "transaction_amount",
+    "총액": "transaction_amount",
+    "합계금액": "transaction_amount",
+    "누적금액": "transaction_amount",
+    "체결수량": "contract_quantity",
+    "수량": "contract_quantity",
+    "거래수량": "contract_quantity",
+    "건수": "transaction_count",
+    "거래건수": "transaction_count",
+    "펀드": "fund",
+    "펀드별": "fund",
+    "펀드명": "fund",
+    "브로커": "broker",
+    "거래상대방": "broker",
+    "상대방": "broker",
+    "거래처": "broker",
+    "증권사": "broker",
+    "브로커별": "broker",
+    "종목": "item",
+    "종목별": "item",
+    "자산": "item",
+    "일자": "proc_date",
+    "기준일": "proc_date",
+    "최신": "proc_date",
+    "최근": "proc_date",
+    "매수": "buy",
+    "매도": "sell",
+    "순매수": "buy",
+    "순매도": "sell"
+  }
+}
